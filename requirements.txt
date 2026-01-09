@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic-settings
+python-multipart
+pillow
+transformers
+torch
+requests
