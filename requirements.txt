@@ -1,8 +1,10 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pydantic-settings
 python-multipart
-pillow
-transformers
-torch
 requests
+google-genai
+supabase
+postgrest  # A veces es necesario como dependencia directa para filtros complejos
+python-dotenv
+gunicorn

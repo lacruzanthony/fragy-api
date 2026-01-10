@@ -1,0 +1,22 @@
+# Python
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+env/
+venv/
+.env
+
+# VS Code & OS
+.vscode/
+.idea/
+.git/
+.gitignore
+*.DS_Store
+
+# Datos y pruebas (Si tienes carpetas de fotos locales)
+*.jpg
+*.jpeg
+*.png
+temp/
