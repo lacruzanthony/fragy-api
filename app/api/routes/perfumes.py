@@ -1,5 +1,6 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException
 from app.services.recognition import scan_perfume_image
+from app.services.supabase import supabase_client
 
 router = APIRouter()
 
@@ -9,17 +10,42 @@ async def identify_perfume(file: UploadFile = File(...)):
     image_bytes = await file.read()
     
     # Llamamos al servicio
-    perfume_data = await scan_perfume_image(image_bytes)
+    perfume = await scan_perfume_image(image_bytes)
     
-    if not perfume_data:
+    if not perfume:
         raise HTTPException(status_code=404, detail="No se encontró el perfume en nuestra base de datos")
     
     return {
-        "id": perfume_data.get("id"),
-        "name": perfume_data.get("name"),
+        "id": perfume.get("id"),
+        "name": perfume.get("name"),
     }
 
 @router.get("/{perfume_id}")
 async def get_perfume(perfume_id: int):
-    # Ejemplo de otro endpoint para obtener info por ID
-    return {"perfume_id": perfume_id, "data": "Metadata aquí"}
+    try:
+        response = supabase_client.table("perfumes") \
+            .select("*") \
+            .eq("id", perfume_id) \
+            .execute()
+
+        if not response.data:
+            return None
+
+        perfume = response.data[0]
+
+        return {
+            "id": perfume.get("id"),
+            "name": perfume.get("name"),
+            "brand": perfume.get("brand"),
+            "image_url": perfume.get("image_url"),
+            "notes": {
+                "top": perfume.get("notes_top"),
+                "heart": perfume.get("notes_heart"),
+                "base": perfume.get("notes_base"),
+                "flat": perfume.get("notes_flat"),
+            }
+        }
+
+    except Exception as e:
+        print(f"Error querying Supabase: {e}")
+        return None
