@@ -1,7 +1,7 @@
 from app.services.vision import analyze_perfume_image
 from app.services.supabase import supabase_client
 
-async def predict_and_get_metadata(image_bytes: bytes):
+async def scan_perfume_image(image_bytes: bytes):
     # 1. Llamamos al servicio de Vision (Gemini)
     # Este nos devolverá algo como {"brand": "Creed", "name": "Aventus"} o None
     prediction = await analyze_perfume_image(image_bytes)
@@ -17,7 +17,7 @@ async def predict_and_get_metadata(image_bytes: bytes):
     # y soporte pequeñas variaciones en el nombre.
     try:
         response = supabase_client.table("perfumes") \
-            .select("*") \
+            .select("id, name") \
             .ilike("name", f"%{name}%") \
             .ilike("brand", f"%{brand}%") \
             .execute()
