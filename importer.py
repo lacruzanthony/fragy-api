@@ -76,8 +76,15 @@ def ejecutar_limpieza():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     
     try:
-        print("🔍 Accediendo al listado...")
-        driver.get("https://www.parfumo.com/search?show_search=1")
+        config = supabase.table("scraper_config").select("last_page_scraped").eq("id", "parfumo_state").single().execute()
+        current_page = config.data["last_page_scraped"] + 1
+    except Exception as e:
+        print(f"⚠️ No se pudo obtener el estado, iniciando en página 1. Error: {e}")
+        current_page = 1
+    
+    try:
+        print(f"🔍 Accediendo a la página {current_page} del buscador...")
+        driver.get(f"https://www.parfumo.com/search?show_search={current_page}")
         time.sleep(5)
 
         elementos = driver.find_elements(By.CSS_SELECTOR, ".image a")
@@ -85,7 +92,7 @@ def ejecutar_limpieza():
 
         print(f"✅ Se encontraron {len(links)} perfumes para procesar.")
 
-        for i, link in enumerate(links[:10]):
+        for i, link in enumerate(links[:20]):
             print(f"[{i+1}/{len(links)}] Procesando: {link.split('/')[-1]}")
             driver.get(link)
             
@@ -102,7 +109,9 @@ def ejecutar_limpieza():
                 print(f"   ✨ Guardado limpio: {data['name']}")
             except Exception as e:
                 print(f"   ❌ Error en DB: {e}")
-
+                
+        supabase.table("scraper_config").update({"last_page_scraped": current_page}).eq("id", "parfumo_state").execute()
+        print(f"✅ Página {current_page} completada y guardada en Supabase.")
     finally:
         driver.quit()
         print("\n🏁 ¡Limpieza terminada!")
