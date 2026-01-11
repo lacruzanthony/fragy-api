@@ -5,6 +5,6 @@ mypy_cache
 coverage
 htmlcov
 cache
-venv
+venv*
 .env
 fly*
