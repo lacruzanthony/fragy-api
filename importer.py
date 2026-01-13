@@ -84,7 +84,7 @@ def ejecutar_limpieza():
     
     try:
         print(f"🔍 Accediendo a la página {current_page} del buscador...")
-        driver.get(f"https://www.parfumo.com/search?show_search={current_page}")
+        driver.get(f"https://www.parfumo.com/s_perfumes_x.php?current_page={current_page}")
         time.sleep(5)
 
         elementos = driver.find_elements(By.CSS_SELECTOR, ".image a")
