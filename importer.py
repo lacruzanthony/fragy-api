@@ -122,8 +122,3 @@ def ejecutar_limpieza():
 
 if __name__ == "__main__":
     ejecutar_limpieza()
-r.quit()
-        print("\n🏁 ¡Limpieza terminada!")
-
-if __name__ == "__main__":
-    ejecutar_limpieza()
