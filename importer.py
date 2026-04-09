@@ -63,7 +63,9 @@ def ejecutar_limpieza():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
 
-    driver = webdriver.Chrome(service=Service
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    
+    try:
         print("🔍 Obteniendo URLs existentes de la base de datos...")
         existing_urls_data = supabase.table("perfumes").select("source_url").execute()
         existing_urls = {item['source_url'] for item in existing_urls_data.data}
