@@ -79,7 +79,20 @@ def ejecutar_limpieza():
         driver.get("https://www.parfumo.com/Brands")
         time.sleep(5)
 
-        brand_links = [el.get_attribute('href') for el in driver.find_elements(By.CSS_SELECTOR, ".blist a")]
+        letter_links = [el.get_attribute('href') for el in driver.find_elements(By.CSS_SELECTOR, ".letters-nav nav a")]
+        print(f"✅ Se encontraron {len(letter_links)} páginas de letras.")
+
+        brand_links = []
+        for letter_link in letter_links:
+            print(f"   > Procesando letra: {letter_link.split('/')[-1]}")
+            driver.get(letter_link)
+            time.sleep(3)
+            
+            brand_elements = driver.find_elements(By.CSS_SELECTOR, ".brands_list a.p-box")
+            for el in brand_elements:
+                brand_links.append(el.get_attribute('href'))
+
+        brand_links = sorted(list(set(brand_links)))
         print(f"✅ Se encontraron {len(brand_links)} marcas.")
 
         all_perfume_links = []
