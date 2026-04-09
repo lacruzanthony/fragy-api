@@ -63,27 +63,43 @@ def ejecutar_limpieza():
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36")
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    
-    try:
-        config = supabase.table("scraper_config").select("last_page_scraped").eq("id", "parfumo_state").single().execute()
-        current_page = config.data["last_page_scraped"] + 1
+    driver = webdriver.Chrome(service=Service
+        print("🔍 Obteniendo URLs existentes de la base de datos...")
+        existing_urls_data = supabase.table("perfumes").select("source_url").execute()
+        existing_urls = {item['source_url'] for item in existing_urls_data.data}
+        print(f"✅ Se encontraron {len(existing_urls)} URLs existentes.")
     except Exception as e:
-        print(f"⚠️ No se pudo obtener el estado, iniciando en página 1. Error: {e}")
-        current_page = 1
-    
+        print(f"⚠️ No se pudo obtener las URLs existentes. Error: {e}")
+        existing_urls = set()
+
     try:
-        print(f"🔍 Accediendo a la página {current_page} del buscador...")
-        driver.get(f"https://www.parfumo.com/s_perfumes_x.php?current_page={current_page}")
+        print("🔍 Accediendo a la página de marcas...")
+        driver.get("https://www.parfumo.com/Brands")
         time.sleep(5)
 
-        elementos = driver.find_elements(By.CSS_SELECTOR, ".image a")
-        links = list(set([el.get_attribute('href') for el in elementos if "/Perfumes/" in el.get_attribute('href')]))
+        brand_links = [el.get_attribute('href') for el in driver.find_elements(By.CSS_SELECTOR, ".blist a")]
+        print(f"✅ Se encontraron {len(brand_links)} marcas.")
 
-        print(f"✅ Se encontraron {len(links)} perfumes para procesar.")
+        all_perfume_links = []
+        for brand_link in brand_links:
+            print(f"   > Procesando marca: {brand_link.split('/')[-1]}")
+            driver.get(brand_link)
+            time.sleep(3)
+            
+            perfume_elements = driver.find_elements(By.CSS_SELECTOR, ".pgrid a.grey")
+            for el in perfume_elements:
+                perfume_href = el.get_attribute('href')
+                if "/Perfumes/" in perfume_href:
+                    all_perfume_links.append(perfume_href)
 
-        for i, link in enumerate(links[:20]):
-            print(f"[{i+1}/{len(links)}] Procesando: {link.split('/')[-1]}")
+        unique_perfume_links = sorted(list(set(all_perfume_links)))
+        new_perfume_links = [link for link in unique_perfume_links if link not in existing_urls]
+        
+        print(f"✅ Se encontraron {len(unique_perfume_links)} perfumes en total.")
+        print(f"🆕 Se procesarán {len(new_perfume_links)} perfumes nuevos.")
+
+        for i, link in enumerate(new_perfume_links[:30]): # Procesar de 30 en 30
+            print(f"[{i+1}/{len(new_perfume_links)}] Procesando: {link.split('/')[-1]}")
             driver.get(link)
             
             driver.execute_script("window.scrollTo(0, 500);")
@@ -93,15 +109,18 @@ def ejecutar_limpieza():
             data["source_url"] = link
             
             try:
-                supabase.table("perfumes").upsert(data).execute()
-                print(f"   ✨ Guardado limpio: {data['name']}")
+                supabase.table("perfumes").upsert(data, on_conflict="source_url").execute()
+                print(f"   ✨ Guardado: {data['brand']} - {data['name']}")
             except Exception as e:
                 print(f"   ❌ Error en DB: {e}")
                 
-        supabase.table("scraper_config").update({"last_page_scraped": current_page}).eq("id", "parfumo_state").execute()
-        print(f"✅ Página {current_page} completada y guardada en Supabase.")
     finally:
         driver.quit()
+        print("\n🏁 ¡Proceso de importación terminado!")
+
+if __name__ == "__main__":
+    ejecutar_limpieza()
+r.quit()
         print("\n🏁 ¡Limpieza terminada!")
 
 if __name__ == "__main__":
