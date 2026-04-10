@@ -98,41 +98,47 @@ def ejecutar_limpieza():
             last_brand_index = int(config.data["last_page_scraped"])
         except Exception:
             last_brand_index = -1
+        
+        BRANDS_PER_RUN = 10
+        print(f"⚙️  Se procesarán {BRANDS_PER_RUN} marcas en esta ejecución.")
+
+        for i in range(BRANDS_PER_RUN):
+            current_brand_index = (last_brand_index + 1 + i) % total_brands
+            brand_to_scrape_url = all_brand_links[current_brand_index]
             
-        next_brand_index = (last_brand_index + 1) % total_brands
-        brand_to_scrape_url = all_brand_links[next_brand_index]
-        
-        print(f"⏭️  Procesando marca {next_brand_index + 1}/{total_brands}: {brand_to_scrape_url.split('/')[-1]}")
-        
-        driver.get(brand_to_scrape_url)
-        time.sleep(3)
-
-        perfume_links_on_page = []
-        perfume_elements = driver.find_elements(By.CSS_SELECTOR, ".pgrid .name a")
-        for el in perfume_elements:
-            perfume_href = el.get_attribute('href')
-            if "/Perfumes/" in perfume_href:
-                perfume_links_on_page.append(perfume_href)
-        
-        new_perfume_links = [link for link in set(perfume_links_on_page) if link not in existing_urls]
-        print(f"   > Se encontraron {len(perfume_links_on_page)} perfumes, de los cuales {len(new_perfume_links)} son nuevos.")
-
-        for i, link in enumerate(new_perfume_links):
-            print(f"   [{i+1}/{len(new_perfume_links)}] Procesando: {link.split('/')[-1]}")
-            driver.get(link)
+            print(f"{(i+1):02d}/{BRANDS_PER_RUN} - Procesando marca {current_brand_index + 1}/{total_brands}: {brand_to_scrape_url.split('/')[-1]}")
+            
+            driver.get(brand_to_scrape_url)
             time.sleep(3)
+
+            perfume_links_on_page = []
+            perfume_elements = driver.find_elements(By.CSS_SELECTOR, ".pgrid .name a")
+            for el in perfume_elements:
+                perfume_href = el.get_attribute('href')
+                if "/Perfumes/" in perfume_href:
+                    perfume_links_on_page.append(perfume_href)
             
-            data = extraer_detalle(driver.page_source)
-            data["source_url"] = link
+            new_perfume_links = [link for link in set(perfume_links_on_page) if link not in existing_urls]
+            print(f"   > Se encontraron {len(perfume_links_on_page)} perfumes, de los cuales {len(new_perfume_links)} son nuevos.")
+
+            for i, link in enumerate(new_perfume_links):
+                print(f"   [{i+1}/{len(new_perfume_links)}] Procesando: {link.split('/')[-1]}")
+                driver.get(link)
+                time.sleep(3)
+                
+                data = extraer_detalle(driver.page_source)
+                data["source_url"] = link
+                
+                try:
+                    supabase.table("perfumes").upsert(data, on_conflict="source_url").execute()
+                    print(f"      ✨ Guardado: {data['brand']} - {data['name']}")
+                    existing_urls.add(link) # Add to set to avoid re-scraping in the same run
+                except Exception as e:
+                    print(f"      ❌ Error en DB: {e}")
             
-            try:
-                supabase.table("perfumes").upsert(data, on_conflict="source_url").execute()
-                print(f"      ✨ Guardado: {data['brand']} - {data['name']}")
-            except Exception as e:
-                print(f"      ❌ Error en DB: {e}")
-        
-        supabase.table("scraper_config").update({"last_page_scraped": next_brand_index}).eq("id", "parfumo_state").execute()
-        print(f"✅ Marca procesada. Índice guardado: {next_brand_index}")
+        final_brand_index = (last_brand_index + BRANDS_PER_RUN) % total_brands
+        supabase.table("scraper_config").update({"last_page_scraped": final_brand_index}).eq("id", "parfumo_state").execute()
+        print(f"✅ Lote de marcas procesado. Índice final guardado: {final_brand_index}")
 
     finally:
         driver.quit()
