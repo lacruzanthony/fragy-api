@@ -108,7 +108,7 @@ def ejecutar_limpieza():
         time.sleep(3)
 
         perfume_links_on_page = []
-        perfume_elements = driver.find_elements(By.CSS_SELECTOR, ".pgrid a.grey")
+        perfume_elements = driver.find_elements(By.CSS_SELECTOR, ".pgrid .name a")
         for el in perfume_elements:
             perfume_href = el.get_attribute('href')
             if "/Perfumes/" in perfume_href:
