@@ -66,7 +66,7 @@ def ejecutar_limpieza():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     
     try:
-        print("🔍 Obteniendo URLs existentes de la base de datos...")
+        print("🔍 Obteniendo URLs de perfumes existentes...")
         existing_urls_data = supabase.table("perfumes").select("source_url").execute()
         existing_urls = {item['source_url'] for item in existing_urls_data.data}
         print(f"✅ Se encontraron {len(existing_urls)} URLs existentes.")
@@ -75,49 +75,51 @@ def ejecutar_limpieza():
         existing_urls = set()
 
     try:
-        print("🔍 Accediendo a la página de marcas...")
+        print("📖 Reuniendo todas las marcas de la A-Z...")
         driver.get("https://www.parfumo.com/Brands")
-        time.sleep(5)
+        time.sleep(3)
 
         letter_links = [el.get_attribute('href') for el in driver.find_elements(By.CSS_SELECTOR, ".letters-nav nav a")]
-        print(f"✅ Se encontraron {len(letter_links)} páginas de letras.")
-
-        brand_links = []
+        
+        all_brand_links = []
         for letter_link in letter_links:
-            print(f"   > Procesando letra: {letter_link.split('/')[-1]}")
             driver.get(letter_link)
-            time.sleep(3)
-            
+            time.sleep(2)
             brand_elements = driver.find_elements(By.CSS_SELECTOR, ".brands_list a.p-box")
             for el in brand_elements:
-                brand_links.append(el.get_attribute('href'))
+                all_brand_links.append(el.get_attribute('href'))
 
-        brand_links = sorted(list(set(brand_links)))
-        print(f"✅ Se encontraron {len(brand_links)} marcas.")
+        all_brand_links = sorted(list(set(all_brand_links)))
+        total_brands = len(all_brand_links)
+        print(f"✅ Se encontraron {total_brands} marcas en total.")
 
-        all_perfume_links = []
-        for brand_link in brand_links:
-            print(f"   > Procesando marca: {brand_link.split('/')[-1]}")
-            driver.get(brand_link)
-            time.sleep(3)
+        try:
+            config = supabase.table("scraper_config").select("last_page_scraped").eq("id", "parfumo_state").single().execute()
+            last_brand_index = int(config.data["last_page_scraped"])
+        except Exception:
+            last_brand_index = -1
             
-            perfume_elements = driver.find_elements(By.CSS_SELECTOR, ".pgrid a.grey")
-            for el in perfume_elements:
-                perfume_href = el.get_attribute('href')
-                if "/Perfumes/" in perfume_href:
-                    all_perfume_links.append(perfume_href)
-
-        unique_perfume_links = sorted(list(set(all_perfume_links)))
-        new_perfume_links = [link for link in unique_perfume_links if link not in existing_urls]
+        next_brand_index = (last_brand_index + 1) % total_brands
+        brand_to_scrape_url = all_brand_links[next_brand_index]
         
-        print(f"✅ Se encontraron {len(unique_perfume_links)} perfumes en total.")
-        print(f"🆕 Se procesarán {len(new_perfume_links)} perfumes nuevos.")
+        print(f"⏭️  Procesando marca {next_brand_index + 1}/{total_brands}: {brand_to_scrape_url.split('/')[-1]}")
+        
+        driver.get(brand_to_scrape_url)
+        time.sleep(3)
 
-        for i, link in enumerate(new_perfume_links[:30]): # Procesar de 30 en 30
-            print(f"[{i+1}/{len(new_perfume_links)}] Procesando: {link.split('/')[-1]}")
+        perfume_links_on_page = []
+        perfume_elements = driver.find_elements(By.CSS_SELECTOR, ".pgrid a.grey")
+        for el in perfume_elements:
+            perfume_href = el.get_attribute('href')
+            if "/Perfumes/" in perfume_href:
+                perfume_links_on_page.append(perfume_href)
+        
+        new_perfume_links = [link for link in set(perfume_links_on_page) if link not in existing_urls]
+        print(f"   > Se encontraron {len(perfume_links_on_page)} perfumes, de los cuales {len(new_perfume_links)} son nuevos.")
+
+        for i, link in enumerate(new_perfume_links):
+            print(f"   [{i+1}/{len(new_perfume_links)}] Procesando: {link.split('/')[-1]}")
             driver.get(link)
-            
-            driver.execute_script("window.scrollTo(0, 500);")
             time.sleep(3)
             
             data = extraer_detalle(driver.page_source)
@@ -125,10 +127,13 @@ def ejecutar_limpieza():
             
             try:
                 supabase.table("perfumes").upsert(data, on_conflict="source_url").execute()
-                print(f"   ✨ Guardado: {data['brand']} - {data['name']}")
+                print(f"      ✨ Guardado: {data['brand']} - {data['name']}")
             except Exception as e:
-                print(f"   ❌ Error en DB: {e}")
-                
+                print(f"      ❌ Error en DB: {e}")
+        
+        supabase.table("scraper_config").update({"last_page_scraped": next_brand_index}).eq("id", "parfumo_state").execute()
+        print(f"✅ Marca procesada. Índice guardado: {next_brand_index}")
+
     finally:
         driver.quit()
         print("\n🏁 ¡Proceso de importación terminado!")
