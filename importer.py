@@ -99,7 +99,7 @@ def ejecutar_limpieza():
         except Exception:
             last_brand_index = -1
         
-        BRANDS_PER_RUN = 30
+        BRANDS_PER_RUN = 100
         print(f"⚙️  Se procesarán {BRANDS_PER_RUN} marcas en esta ejecución.")
 
         for i in range(BRANDS_PER_RUN):
