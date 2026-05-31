@@ -35,12 +35,12 @@ async def scan_perfume(image_bytes: bytes):
         )
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash-lite-preview-02-05",
+            model="gemini-3.1-flash-lite",
             contents=[PERFUME_EXPERT_PROMPT, image_part]
         )
         
         text = response.text.strip() if response.text else ""
-        
+
         if not text or "Unknown" in text:
             raise ImageUnreadableError("Could not identify the perfume from the image.")
             
@@ -57,7 +57,7 @@ async def scan_perfume(image_bytes: bytes):
         response = supabase_client.table("perfumes") \
             .select("id, name") \
             .ilike("name", f"%{name}%") \
-            .ilike("brand", f"%{brand}%") \
+            .or_(f"brand.ilike.%{brand}%,name.ilike.%{brand}%") \
             .execute()
 
         if not response.data:

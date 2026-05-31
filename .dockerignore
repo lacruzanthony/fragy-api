@@ -1,22 +1,30 @@
-# Python
+# Python (Global catches)
 **/__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.venv/
-env/
-venv/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/.venv/**
+**/.venv
+**/env/**
+**/env
+**/venv/**
+**/venv
+**/venv_importer/**
 .env
 
 # VS Code & OS
-.vscode/
-.idea/
-.git/
+**/.vscode/**
+**/.idea/**
+**/.git/**
 .gitignore
 *.DS_Store
 
-# Datos y pruebas (Si tienes carpetas de fotos locales)
+# Data, Caches, & Builds
+**/build/**
+**/dist/**
 *.jpg
 *.jpeg
 *.png
-temp/
+**/temp/**
+**/*.db
+**/*.sqlite3
