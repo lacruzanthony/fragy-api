@@ -1,5 +1,5 @@
 import base64
-from openai import OpenAI
+import anthropic
 from app.services.exceptions import ImageUnreadableError, ServiceError
 from app.services.vision.protocol import VisionProvider
 from app.services.vision.prompts import PERFUME_EXPERT_PROMPT
@@ -7,30 +7,41 @@ from app.services.vision.prompts import PERFUME_EXPERT_PROMPT
 
 class DeepSeekVisionProvider(VisionProvider):
     def __init__(self, api_key: str, model: str = "deepseek-v4-flash"):
-        self._client = OpenAI(
+        self._client = anthropic.Anthropic(
             api_key=api_key,
-            base_url="https://api.deepseek.com"
+            base_url="https://api.deepseek.com/anthropic"
         )
         self._model = model
 
     async def identify(self, image_bytes: bytes) -> tuple[str, str]:
         try:
             image_b64 = base64.b64encode(image_bytes).decode("utf-8")
-            data_uri = f"data:image/jpeg;base64,{image_b64}"
 
-            response = self._client.chat.completions.create(
+            message = self._client.messages.create(
                 model=self._model,
+                max_tokens=1000,
                 messages=[
-                    {"role": "system", "content": PERFUME_EXPERT_PROMPT},
-                    {"role": "user", "content": [
-                        {"type": "text", "text": "Identify this perfume."},
-                        {"type": "image_url", "image_url": {"url": data_uri}}
-                    ]}
-                ],
-                stream=False,
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": "image/jpeg",
+                                    "data": image_b64
+                                }
+                            },
+                            {
+                                "type": "text",
+                                "text": PERFUME_EXPERT_PROMPT
+                            }
+                        ]
+                    }
+                ]
             )
 
-            text = response.choices[0].message.content.strip() if response.choices else ""
+            text = message.content[0].text.strip() if message.content else ""
 
             if not text or "Unknown" in text:
                 raise ImageUnreadableError("Could not identify the perfume from the image.")
