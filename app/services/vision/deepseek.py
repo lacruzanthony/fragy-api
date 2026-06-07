@@ -41,7 +41,11 @@ class DeepSeekVisionProvider(VisionProvider):
                 ]
             )
 
-            text = message.content[0].text.strip() if message.content else ""
+            text = ""
+            for block in message.content:
+                if block.type == "text":
+                    text = block.text.strip()
+                    break
 
             if not text or "Unknown" in text:
                 raise ImageUnreadableError("Could not identify the perfume from the image.")
