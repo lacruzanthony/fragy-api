@@ -9,4 +9,3 @@ postgrest  # A veces es necesario como dependencia directa para filtros complejo
 python-dotenv
 gunicorn
 openai
-anthropic

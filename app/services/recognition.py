@@ -12,10 +12,6 @@ if settings.AI_PROVIDER == "gemini":
     print("Using Gemini Vision API")
     from .vision.gemini import GeminiVisionProvider
     _vision: VisionProvider = GeminiVisionProvider(api_key=settings.AI_API_KEY)
-elif settings.AI_PROVIDER == "deepseek":
-    print("Using DeepSeek Vision API")
-    from .vision.deepseek import DeepSeekVisionProvider
-    _vision: VisionProvider = DeepSeekVisionProvider(api_key=settings.DEEPSEEK_API_KEY)
 elif settings.AI_PROVIDER == "openrouter":
     print("Using OpenRouter Vision API")
     from .vision.openrouter import OpenRouterVisionProvider

@@ -9,7 +9,6 @@ class Settings(BaseSettings):
     
     AI_PROVIDER: str = "openrouter" 
     AI_API_KEY: str = ""
-    DEEPSEEK_API_KEY: str = ""
     OPENROUTER_API_KEY: str = ""
 
     model_config = SettingsConfigDict(
