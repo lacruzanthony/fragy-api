@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     
     AI_PROVIDER: str = "gemini"
     AI_API_KEY: str = ""
+    DEEPSEEK_API_KEY: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env", case_sensitive=True

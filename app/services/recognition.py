@@ -11,6 +11,9 @@ from .vision.protocol import VisionProvider
 if settings.AI_PROVIDER == "gemini":
     from .vision.gemini import GeminiVisionProvider
     _vision: VisionProvider = GeminiVisionProvider(api_key=settings.AI_API_KEY)
+elif settings.AI_PROVIDER == "deepseek":
+    from .vision.deepseek import DeepSeekVisionProvider
+    _vision: VisionProvider = DeepSeekVisionProvider(api_key=settings.DEEPSEEK_API_KEY)
 else:
     raise ServiceError(f"Unknown AI provider: {settings.AI_PROVIDER}")
 
