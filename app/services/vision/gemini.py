@@ -32,5 +32,4 @@ class GeminiVisionProvider(VisionProvider):
         except (ImageUnreadableError, ServiceError):
             raise
         except Exception as e:
-            print(f"Gemini API Error: {e}")
             raise ServiceError("Failed to connect to the AI service.")

@@ -9,11 +9,9 @@ from .exceptions import (
 from .vision.protocol import VisionProvider
 
 if settings.AI_PROVIDER == "gemini":
-    print("Using Gemini Vision API")
     from .vision.gemini import GeminiVisionProvider
     _vision: VisionProvider = GeminiVisionProvider(api_key=settings.AI_API_KEY)
 elif settings.AI_PROVIDER == "openrouter":
-    print("Using OpenRouter Vision API")
     from .vision.openrouter import OpenRouterVisionProvider
     _vision: VisionProvider = OpenRouterVisionProvider(api_key=settings.OPENROUTER_API_KEY)
 else:
@@ -25,7 +23,6 @@ async def scan_perfume(image_bytes: bytes):
     except RecognitionError:
         raise
     except Exception as e:
-        print(f"Vision API Error: {e}")
         raise ServiceError("Failed to connect to the AI service.")
 
     try:
@@ -46,5 +43,4 @@ async def scan_perfume(image_bytes: bytes):
     except RecognitionError:
         raise
     except Exception as e:
-        print(f"Supabase Error: {e}")
         raise ServiceError("Database connection error.")
