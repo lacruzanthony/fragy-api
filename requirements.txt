@@ -8,3 +8,4 @@ supabase
 postgrest  # A veces es necesario como dependencia directa para filtros complejos
 python-dotenv
 gunicorn
+openai
