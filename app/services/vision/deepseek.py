@@ -41,11 +41,17 @@ class DeepSeekVisionProvider(VisionProvider):
                 ]
             )
 
+            print(f"DeepSeek content types: {[type(b).__name__ for b in message.content]}")
+            for block in message.content:
+                print(f"  block type={block.type}, dir={[a for a in dir(block) if not a.startswith('_')]}")
+
             text = ""
             for block in message.content:
                 if block.type == "text":
-                    text = block.text.strip()
+                    text = getattr(block, "text", "").strip()
                     break
+
+            print(f"DeepSeek extracted text: '{text}'")
 
             if not text or "Unknown" in text:
                 raise ImageUnreadableError("Could not identify the perfume from the image.")
