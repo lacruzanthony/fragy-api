@@ -32,12 +32,17 @@ class OpenRouterVisionProvider(VisionProvider):
                 stream=False,
             )
 
+            print(f"OpenRouter model: {self._model}")
+            print(f"OpenRouter response status: {response.choices[0].finish_reason}")
+            print(f"OpenRouter raw text: '{response.choices[0].message.content}'")
+
             text = response.choices[0].message.content.strip()
 
             if not text or "Unknown" in text:
                 raise ImageUnreadableError("Could not identify the perfume from the image.")
 
             brand, _, name = text.partition("|")
+            print(f"OpenRouter parsed -> brand='{brand.strip()}', name='{name.strip()}'")
             return brand.strip(), name.strip()
 
         except (ImageUnreadableError, ServiceError):
