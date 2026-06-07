@@ -6,7 +6,7 @@ from app.services.vision.prompts import PERFUME_EXPERT_PROMPT
 
 
 class DeepSeekVisionProvider(VisionProvider):
-    def __init__(self, api_key: str, model: str = "deepseek-v4-flash"):
+    def __init__(self, api_key: str, model: str = "deepseek-v4-pro"):
         self._client = anthropic.Anthropic(
             api_key=api_key,
             base_url="https://api.deepseek.com/anthropic"
