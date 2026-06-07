@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     SUPABASE_URL: str = ""
     SUPABASE_KEY: str = ""
     
+    AI_PROVIDER: str = "gemini"
     AI_API_KEY: str = ""
 
     model_config = SettingsConfigDict(
