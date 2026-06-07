@@ -16,8 +16,11 @@ async def identify_perfume(file: UploadFile = File(...)):
         perfume = await scan_perfume(image_bytes)
         
         return {
-            "id": perfume.get("id"),
-            "name": perfume.get("name"),
+            "perfume": {
+                "id": perfume.get("id"),
+                "name": perfume.get("name"),
+                "brand": perfume.get("brand"),
+            }
         }
 
     except ImageUnreadableError as e:

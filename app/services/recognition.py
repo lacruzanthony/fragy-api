@@ -34,7 +34,7 @@ async def scan_perfume(image_bytes: bytes):
 
     try:
         response = supabase_client.table("perfumes") \
-            .select("id, name") \
+            .select("id, name, brand") \
             .ilike("name", f"%{name}%") \
             .or_(f"brand.ilike.%{brand}%,name.ilike.%{brand}%") \
             .execute()
@@ -42,7 +42,10 @@ async def scan_perfume(image_bytes: bytes):
         if not response.data:
             raise PerfumeNotFoundError(f"Perfume '{brand} {name}' identified but not found in database.")
 
-        return response.data[0]
+        perfume = response.data[0]
+        perfume["name"] = perfume.get("name", "").strip()
+        perfume["brand"] = perfume.get("brand", "").strip()
+        return perfume
 
     except RecognitionError:
         raise
