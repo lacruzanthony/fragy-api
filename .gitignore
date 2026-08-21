@@ -7,4 +7,3 @@ htmlcov
 cache
 venv*
 .env
-fly*
