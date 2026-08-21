@@ -6,7 +6,7 @@ from app.services.vision.prompts import PERFUME_EXPERT_PROMPT
 
 
 class OpenRouterVisionProvider(VisionProvider):
-    def __init__(self, api_key: str, model: str = "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free"):
+    def __init__(self, api_key: str, model: str = "openai/gpt-5.6-luna-pro"):
         self._client = OpenAI(
             base_url="https://openrouter.ai/api/v1",
             api_key=api_key,
